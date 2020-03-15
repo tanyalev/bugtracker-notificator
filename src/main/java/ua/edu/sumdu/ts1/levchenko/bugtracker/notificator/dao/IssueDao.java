@@ -10,6 +10,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
+import static ua.edu.sumdu.ts1.levchenko.bugtracker.notificator.dao.Util.noneIsEmpty;
+import static ua.edu.sumdu.ts1.levchenko.bugtracker.notificator.dao.Util.splitId;
+
 public class IssueDao {
     private final static Logger log = Logger.getLogger(IssueDao.class.getName());
 
@@ -30,23 +33,6 @@ public class IssueDao {
 
     public IssueDao(DataSource dataSource) {
         this.dataSource = dataSource;
-    }
-
-    private boolean noneIsEmpty(String... s) {
-        for (String s1 : s) {
-            if (!s1.isEmpty()) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private String[] splitId(String id) throws Exception {
-        String[] parts = id.split("-");
-        if (parts.length < 2) {
-            throw new Exception("Failed to split id");
-        }
-        return parts;
     }
 
     public List<Issue> getAllIssues() {
