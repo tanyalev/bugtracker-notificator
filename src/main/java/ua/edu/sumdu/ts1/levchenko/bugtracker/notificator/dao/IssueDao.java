@@ -22,8 +22,8 @@ public class IssueDao {
             "select issue_id, summary, name, (project_id || '-' || CAST ( number as VARCHAR)) as number from \"BugTracker\".\"Issue\"";
     private final String SELECT_ISSUE_BY_ID =
             "select issue.issue_id as issue_id, issue.status_id, issue.summary as summary, issue.description as description, issue.priority_id as priority_id, issue.type_id as type_id, issue.number as number, " +
-                    "buser.user_id as assignee_id, buser.name as assignee_name, " +
-                    "b2user.user_id as author_id, b2user.name as author_name, " +
+                    "buser.user_id as assignee_id, buser.name as assignee_name, buser.email as assignee_email," +
+                    "b2user.user_id as author_id, b2user.name as author_name, b2user.email as author_email," +
                     "project.project_id as project_id, project.name as project_name " +
                     "from \"BugTracker\".\"Issue\" issue " +
                     "inner join \"BugTracker\".\"User\" buser on issue.assignee_id = buser.user_id " +
@@ -86,19 +86,21 @@ public class IssueDao {
 
                     String assigneeId = resultSet.getString("assignee_id");
                     String assigneeName = resultSet.getString("assignee_name");
+                    String assigneeEmail = resultSet.getString("assignee_email");
 
                     String authorId = resultSet.getString("author_id");
                     String authorName = resultSet.getString("author_name");
+                    String authorEmail = resultSet.getString("author_email");
 
                     boolean issueIsOk = noneIsEmpty(statusId, typeId, priorityId, issueId, summary, number, description);
                     boolean projectIsOk = noneIsEmpty(projectId, projectName);
-                    boolean assigneeIsOk = noneIsEmpty(assigneeId, assigneeName);
-                    boolean authorIsOk = noneIsEmpty(authorId, authorName);
+                    boolean assigneeIsOk = noneIsEmpty(assigneeId, assigneeName, assigneeEmail);
+                    boolean authorIsOk = noneIsEmpty(authorId, authorName, authorEmail);
 
                     if (issueIsOk && projectIsOk && assigneeIsOk && authorIsOk) {
                         Project project = new Project(projectId, projectName);
-                        User assignee = new User(assigneeId, assigneeName);
-                        User author = new User(authorId, assigneeName);
+                        User assignee = new User(assigneeId, assigneeName, assigneeEmail);
+                        User author = new User(authorId, assigneeName, authorEmail);
                         Issue issue = new Issue(issueId, summary, description, priorityId, typeId, statusId,
                                 projectId + "-" + number, project, assignee, author);
                         issues.add(issue);

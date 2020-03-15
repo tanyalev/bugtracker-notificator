@@ -6,7 +6,6 @@ import javax.sql.DataSource;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import java.util.logging.Logger;
 
 import static ua.edu.sumdu.ts1.levchenko.bugtracker.notificator.dao.Util.noneIsEmpty;
@@ -16,9 +15,7 @@ public class UserDao {
 
     private DataSource dataSource;
 
-    private final String SELECT_TABLE_USERS = "select name, user_id from \"BugTracker\".\"User\"";
-    private final String SELECT_USER_BY_ID =
-            "select user_id, name, login, role_id, password from \"BugTracker\".\"User\" where user_id = ?";
+    private final String SELECT_TABLE_USERS = "select name, user_id, email from \"BugTracker\".\"User\"";
 
     public UserDao(DataSource dataSource) {
         this.dataSource = dataSource;
@@ -33,8 +30,9 @@ public class UserDao {
             while (resultSet.next()) {
                 String userId = resultSet.getString("user_id");
                 String name = resultSet.getString("name");
-                if (noneIsEmpty(userId, name)) {
-                    users.add(new User(userId, name));
+                String email = resultSet.getString("email");
+                if (noneIsEmpty(userId, name, email)) {
+                    users.add(new User(userId, name, email));
                 }
             }
         } catch (SQLException e) {
@@ -43,28 +41,4 @@ public class UserDao {
 
         return users;
     }
-
-    public User getUserById(String id) {
-        List<User> users = new ArrayList<>();
-
-        try (Connection connection = dataSource.getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(SELECT_USER_BY_ID)) {
-            preparedStatement.setObject(1, UUID.fromString(id));
-
-            try (ResultSet resultSet = preparedStatement.executeQuery()) {
-                while (resultSet.next()) {
-                    String userId = resultSet.getString("user_id");
-                    String name = resultSet.getString("name");
-                    if (noneIsEmpty(userId, name)) {
-                        users.add(new User(userId, name));
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            log.severe(String.format("Error fetching user by id: %s", e.getMessage()));
-        }
-
-        return users.get(0);
-    }
-
 }

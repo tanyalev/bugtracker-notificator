@@ -24,7 +24,6 @@ public class Notificator {
     private List<User> users;
     private List<Issue> issues;
 
-    private final static User USER_NOT_FOUND = new User("notfound", "", "NOT", "FOUND", "notfound@gmail.com");
     private final static Status STATUS_NOT_FOUND = new Status("-1", "STATUS NOT FOUND");
 
     public Notificator(Config config, DataSourceProvider dataSourceProvider) {
@@ -37,28 +36,14 @@ public class Notificator {
         this.issueDao = new IssueDao(dataSource);
     }
 
-    private void updateUser(User user) {
-        User fullUser = userDao.getUserById(user.getUserId());
-        user.setName(fullUser.getName());
-        user.setLastName(fullUser.getLastName());
-        user.setEmail(fullUser.getEmail());
-        user.setLoginName(fullUser.getLoginName());
-        user.setPassword(fullUser.getPassword());
-        user.setRoleId(fullUser.getRoleId());
-    }
-
-    private User getUserInfo(String userId) {
-        return users.parallelStream()
-                .filter(user -> user.getUserId().equals(userId))
-                .findFirst()
-                .orElse(USER_NOT_FOUND);
-    }
-
-    private void updateIssueUsers(Issue issue) {
+    private void updateIssue(Issue issue) {
         Issue fullIssue = issueDao.getIssueByID(issue.getId());
         if (Objects.nonNull(fullIssue)) {
-            issue.setAuthor(getUserInfo(fullIssue.getAuthor().getUserId()));
-            issue.setAssignee(getUserInfo(fullIssue.getAssignee().getUserId()));
+            issue.setDescription(fullIssue.getDescription());
+            issue.setStatusId(fullIssue.getStatusId());
+            issue.setProject(fullIssue.getProject());
+            issue.setAuthor(fullIssue.getAuthor());
+            issue.setAssignee(fullIssue.getAssignee());
         }
     }
 
@@ -88,9 +73,7 @@ public class Notificator {
         users = userDao.getAllUsers();
         issues = issueDao.getAllIssues();
 
-        users.parallelStream().forEach(this::updateUser);
-        issues.parallelStream().forEach(this::updateIssueUsers);
-
+        issues.parallelStream().forEach(this::updateIssue);
         users.parallelStream().map(this::generateEmail).forEach(emailSender::send);
     }
 }
