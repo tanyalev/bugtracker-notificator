@@ -38,7 +38,7 @@ public class StatusDao {
                 }
             }
         } catch (SQLException e) {
-            log.severe(String.format("Error fetching all users: %s", e.getMessage()));
+            log.severe(String.format("Error fetching all statuses: %s", e.getMessage()));
         }
 
         return statuses;
