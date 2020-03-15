@@ -1,9 +1,11 @@
 package ua.edu.sumdu.ts1.levchenko.bugtracker.notificator.domain;
 
 import ua.edu.sumdu.ts1.levchenko.bugtracker.notificator.dao.IssueDao;
+import ua.edu.sumdu.ts1.levchenko.bugtracker.notificator.dao.StatusDao;
 import ua.edu.sumdu.ts1.levchenko.bugtracker.notificator.dao.UserDao;
 import ua.edu.sumdu.ts1.levchenko.bugtracker.notificator.models.Email;
 import ua.edu.sumdu.ts1.levchenko.bugtracker.notificator.models.Issue;
+import ua.edu.sumdu.ts1.levchenko.bugtracker.notificator.models.Status;
 import ua.edu.sumdu.ts1.levchenko.bugtracker.notificator.models.User;
 
 import javax.sql.DataSource;
@@ -14,19 +16,25 @@ public class Notificator {
     private Config config;
     private EmailSender emailSender;
 
-    private IssueDao issueDao;
+    private StatusDao statusDao;
     private UserDao userDao;
+    private IssueDao issueDao;
 
+    private List<Status> statuses;
     private List<User> users;
     private List<Issue> issues;
+
+    private final static User USER_NOT_FOUND = new User("notfound", "", "NOT", "FOUND", "notfound@gmail.com");
+    private final static Status STATUS_NOT_FOUND = new Status("-1", "STATUS NOT FOUND");
 
     public Notificator(Config config, DataSourceProvider dataSourceProvider) {
         this.config = config;
         this.emailSender = new EmailSender(config.getEmailUsername(), config.getEmailPassword());
 
         DataSource dataSource = dataSourceProvider.provideDataSource();
-        this.issueDao = new IssueDao(dataSource);
+        this.statusDao = new StatusDao(dataSource);
         this.userDao = new UserDao(dataSource);
+        this.issueDao = new IssueDao(dataSource);
     }
 
     private void updateUser(User user) {
@@ -43,7 +51,7 @@ public class Notificator {
         return users.parallelStream()
                 .filter(user -> user.getUserId().equals(userId))
                 .findFirst()
-                .orElseGet(null);
+                .orElse(USER_NOT_FOUND);
     }
 
     private void updateIssueUsers(Issue issue) {
@@ -55,8 +63,12 @@ public class Notificator {
     }
 
     private String generateIssueReport(Issue issue) {
-        return String.format("---\n#%s [%s]\n%s\nAuthor: %s, Assignee: %s, Project: %s.\n---\n",
-                issue.getNumber(), issue.getSummary(), issue.getDescription(),
+        Status issueStatus = statuses.parallelStream()
+                .filter(status -> issue.getStatusId().equals(status.getStatusId()))
+                .findFirst()
+                .orElse(STATUS_NOT_FOUND);
+        return String.format("---\n#%s \"%s\" [%s]\n%s\nAuthor: %s, Assignee: %s, Project: %s.\n---\n",
+                issue.getNumber(), issue.getSummary(), issueStatus.getStatusName(), issue.getDescription(),
                 issue.getAuthor().getName(), issue.getAssignee().getName(), issue.getProject().getProjectName());
     }
 
@@ -72,12 +84,13 @@ public class Notificator {
     }
 
     public void sendNotifications() {
+        statuses = statusDao.getAllStatuses();
         users = userDao.getAllUsers();
         issues = issueDao.getAllIssues();
 
         users.parallelStream().forEach(this::updateUser);
         issues.parallelStream().forEach(this::updateIssueUsers);
 
-        users.parallelStream().map(this::generateEmail).forEach(email -> emailSender.send(email));
+        users.parallelStream().map(this::generateEmail).forEach(emailSender::send);
     }
 }
