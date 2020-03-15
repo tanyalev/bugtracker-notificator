@@ -61,7 +61,7 @@ public class UserDao {
                 }
             }
         } catch (SQLException e) {
-            log.severe(String.format("Error fetching all users: %s", e.getMessage()));
+            log.severe(String.format("Error fetching user by id: %s", e.getMessage()));
         }
 
         return users.get(0);

@@ -6,6 +6,7 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -17,6 +18,8 @@ public class StatusDao {
 
     private DataSource dataSource;
 
+    private final String SELECT_TABLE_STATUSES = "select name, status_id from \"BugTracker\".\"Status\"";
+
     public StatusDao(DataSource dataSource) {
         this.dataSource = dataSource;
     }
@@ -24,18 +27,18 @@ public class StatusDao {
     public List<Status> getAllStatuses() {
         List<Status> statuses = new ArrayList<>();
 
-        try (Connection connection = PostgreConnector.createConnection()) {
-            ResultSet resultSet = PostgreConnector.executeSQL(connection, SELECT_TABLE_STATUSES);
-
+        try (Connection connection = dataSource.getConnection();
+             Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery(SELECT_TABLE_STATUSES)) {
             while (resultSet.next()) {
                 String statusId = resultSet.getString("status_id");
                 String name = resultSet.getString("name");
-
-                if (noneIsEmpty(statusId, name))
+                if (noneIsEmpty(statusId, name)) {
                     statuses.add(new Status(statusId, name));
+                }
             }
         } catch (SQLException e) {
-            logger.error(e);
+            log.severe(String.format("Error fetching all users: %s", e.getMessage()));
         }
 
         return statuses;
