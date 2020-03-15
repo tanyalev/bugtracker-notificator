@@ -44,7 +44,7 @@ public class UserDao {
         return users;
     }
 
-    public List<User> getUserById(String id) {
+    public User getUserById(String id) {
         List<User> users = new ArrayList<>();
 
         try (Connection connection = dataSource.getConnection();
@@ -64,7 +64,7 @@ public class UserDao {
             log.severe(String.format("Error fetching all users: %s", e.getMessage()));
         }
 
-        return users;
+        return users.get(0);
     }
 
 }

@@ -56,10 +56,16 @@ public class IssueDao {
         return issues;
     }
 
-    public Issue getIssueByID(String id) throws Exception {
+    public Issue getIssueByID(String id) {
         List<Issue> issues = new ArrayList<>();
 
-        String[] parts = splitId(id);
+        String[] parts;
+        try {
+            parts = splitId(id);
+        } catch (Exception e) {
+            return null;
+        }
+
         try (Connection connection = dataSource.getConnection();
             PreparedStatement statement = connection.prepareStatement(SELECT_ISSUE_BY_ID)) {
             statement.setString(1, parts[0]);

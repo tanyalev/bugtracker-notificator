@@ -2,7 +2,7 @@ package ua.edu.sumdu.ts1.levchenko.bugtracker.notificator.models;
 
 import java.util.Objects;
 
-class Email {
+public class Email {
     private String subject;
     private String text;
     private String senderEmail;

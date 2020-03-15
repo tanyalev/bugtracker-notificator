@@ -13,10 +13,13 @@ public class Config {
     private final static Logger log = Logger.getLogger(Config.class.getName());
 
     private String dbHost;
-    private int dbPort;
+    private String dbPort;
     private String dbName;
     private String dbUsername;
     private String dbPassword;
+
+    private String emailUsername;
+    private String emailPassword;
 
     public Config(String filename) {
         log.info(String.format("Loading config from \"%s\"", filename));
@@ -48,14 +51,21 @@ public class Config {
     }
 
     private void loadConfigFromProperties(Properties config) {
+        dbHost = config.getProperty("db.host");
+        dbPort = config.getProperty("db.port");
+        dbName = config.getProperty("db.name");
+        dbUsername = config.getProperty("db.username");
+        dbPassword = config.getProperty("db.password");
 
+        emailUsername = config.getProperty("email.username");
+        emailPassword = config.getProperty("email.password");
     }
 
     public String getDbHost() {
         return dbHost;
     }
 
-    public int getDbPort() {
+    public String getDbPort() {
         return dbPort;
     }
 
@@ -69,5 +79,13 @@ public class Config {
 
     public String getDbPassword() {
         return dbPassword;
+    }
+
+    public String getEmailUsername() {
+        return emailUsername;
+    }
+
+    public String getEmailPassword() {
+        return emailPassword;
     }
 }
